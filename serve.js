@@ -2,7 +2,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
-const PORT = 5747; // lappis -> LPIS -> 5747 (keypad)
+const PORT = 5748; // lappis -> LPIS -> 5747 + 1 (keypad)
 const publicDirectory = path.join(__dirname, 'overlay-plugin/templates'); // Path to your public directory
 
 function getMime(extname) {

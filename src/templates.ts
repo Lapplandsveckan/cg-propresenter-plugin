@@ -2,7 +2,7 @@ import http from 'http';
 import fs from 'fs';
 import path from 'path';
 
-const PORT = 5747; // lappis -> LPIS -> 5747 (keypad)
+const PORT = 5748; // lappis -> LPIS -> 5747 + 1 (keypad)
 const publicDirectory = path.join(__dirname, 'templates'); // Path to your public directory
 
 function getMime(extname: string): string {
