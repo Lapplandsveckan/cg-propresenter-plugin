@@ -1,0 +1,16 @@
+:root,
+body,
+#__next {
+    display: flex;
+    overflow: hidden;
+
+    margin: 0;
+    padding: 0;
+
+    height: 100vh;
+    width: 100vw;
+
+    background-color: transparent;
+
+    font-family: 'Alright Sans', sans-serif;
+}

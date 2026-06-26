@@ -1,0 +1,25 @@
+{
+    "bars": {
+        "heading": "Bars",
+        "description": "Toggle cinematic black letterbox bars on the output.",
+        "titleLabel": "Title",
+        "titleHelper": "Shown in the rundown.",
+        "cinematicBars": "Cinematic bars"
+    },
+    "control": {
+        "heading": "ProPresenter",
+        "connectionSection": "Connection",
+        "host": "Host",
+        "port": "Port",
+        "enabled": "Connect to ProPresenter",
+        "connected": "Connected",
+        "disconnected": "Disconnected",
+        "statusSection": "Status",
+        "currentText": "Current text",
+        "noText": "(no text)",
+        "overlaySection": "Overlay",
+        "overlayOn": "Visible",
+        "overlayOff": "Hidden",
+        "toggleOverlay": "Toggle overlay"
+    }
+}

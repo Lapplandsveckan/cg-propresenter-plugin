@@ -1,0 +1,25 @@
+{
+    "bars": {
+        "heading": "Bars",
+        "description": "Växla kinematografiska letterbox-bars i utdatan.",
+        "titleLabel": "Titel",
+        "titleHelper": "Visas i rundown:en.",
+        "cinematicBars": "Kinematografiska bars"
+    },
+    "control": {
+        "heading": "ProPresenter",
+        "connectionSection": "Anslutning",
+        "host": "Värd",
+        "port": "Port",
+        "enabled": "Anslut till ProPresenter",
+        "connected": "Ansluten",
+        "disconnected": "Frånkopplad",
+        "statusSection": "Status",
+        "currentText": "Aktuell text",
+        "noText": "(ingen text)",
+        "overlaySection": "Overlay",
+        "overlayOn": "Synlig",
+        "overlayOff": "Dold",
+        "toggleOverlay": "Växla overlay"
+    }
+}
