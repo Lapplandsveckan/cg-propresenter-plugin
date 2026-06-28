@@ -14,7 +14,7 @@ import {
     PropresenterOverlayEffect,
     type PropresenterOverlayEffectOptions,
 } from './effects/overlay/propresenter';
-import OverlayManager from './overlay';
+import OverlayManager, { MAIN_SIDES, GROUPS, getGroup } from './overlay';
 import { ConfigStore } from './config-store';
 import { ProPresenterClient } from './propresenter';
 
@@ -34,7 +34,7 @@ export default class PropresenterPlugin extends CasparPlugin {
     }
 
     public static get minChannels() {
-        return 1;
+        return 2;
     }
 
     private getInjectionZone(zone: UI_INJECTION_ZONE, key: string) {
@@ -154,8 +154,10 @@ export default class PropresenterPlugin extends CasparPlugin {
     }
 
     private registerEffectGroups() {
-        this.api.getEffectGroup('1:bars');
-        this.api.getEffectGroup('1:overlay');
+        for (const side of MAIN_SIDES) {
+            this.api.getEffectGroup(getGroup(side, GROUPS.BARS));
+            this.api.getEffectGroup(getGroup(side, GROUPS.OVERLAY));
+        }
     }
 
     private registerRoutes() {

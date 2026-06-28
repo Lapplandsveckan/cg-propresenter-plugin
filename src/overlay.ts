@@ -1,22 +1,49 @@
-import { type Logger, type PluginAPI } from '@lappis/cg-manager';
+import { type Effect, type Logger, type PluginAPI } from '@lappis/cg-manager';
 import { type BarsOverlayEffect } from './effects/overlay/bars';
 import { type PropresenterOverlayEffect } from './effects/overlay/propresenter';
+import { SidePair } from './effects/side-pair';
 import type PropresenterPlugin from './index';
+
+export const CHANNELS = { LEFT: 1, RIGHT: 2 } as const;
+export const MAIN_SIDES = [CHANNELS.LEFT, CHANNELS.RIGHT] as const;
+export const GROUPS = { BARS: 'bars', OVERLAY: 'overlay' } as const;
+export const getGroup = (channel: number, group: string) =>
+    `${channel}:${group}`;
 
 export default class OverlayManager {
     private api: PluginAPI;
     private logger: Logger;
 
-    private bars: BarsOverlayEffect = null;
+    private bars: SidePair<BarsOverlayEffect> = null;
     private barsActive = false;
 
-    private effect: PropresenterOverlayEffect = null;
+    private effect: SidePair<PropresenterOverlayEffect> = null;
     private overlayOn = false;
     private currentText = '';
 
     constructor(instance: PropresenterPlugin) {
         this.api = instance['api'];
         this.logger = instance['logger'];
+    }
+
+    private makeSidePair<T extends Effect>(
+        effectName: string,
+        group: string,
+        optsFor: (channel: number) => object,
+    ): SidePair<T> {
+        return new SidePair<T>(
+            this.api.createEffect(
+                effectName,
+                getGroup(CHANNELS.LEFT, group),
+                optsFor(CHANNELS.LEFT),
+            ) as T,
+            this.api.createEffect(
+                effectName,
+                getGroup(CHANNELS.RIGHT, group),
+                optsFor(CHANNELS.RIGHT),
+            ) as T,
+            this.logger,
+        );
     }
 
     public initialize() {
@@ -30,17 +57,17 @@ export default class OverlayManager {
             this.effect = null;
         }
 
-        this.bars = this.api.createEffect(
+        this.bars = this.makeSidePair<BarsOverlayEffect>(
             'overlay-bars',
-            '1:bars',
-            {},
-        ) as BarsOverlayEffect;
+            GROUPS.BARS,
+            () => ({}),
+        );
 
-        this.effect = this.api.createEffect(
+        this.effect = this.makeSidePair<PropresenterOverlayEffect>(
             'overlay-propresenter',
-            '1:overlay',
-            { text: this.currentText, bars: this.barsActive },
-        ) as PropresenterOverlayEffect;
+            GROUPS.OVERLAY,
+            () => ({ text: this.currentText, bars: this.barsActive }),
+        );
 
         // Re-apply pre-reconnect state.
         if (this.barsActive) this.bars.activate();
