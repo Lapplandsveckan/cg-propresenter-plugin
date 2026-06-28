@@ -49,7 +49,10 @@ export default class PropresenterPlugin extends CasparPlugin {
     }
 
     protected onEnable() {
-        this.templates = new Templates(() => this.overlay.initialize());
+        this.templates = new Templates(async () => {
+            await this.api.awaitConnection();
+            if (this.overlay) this.overlay.initialize();
+        });
         this.config = new ConfigStore(this);
         this.overlay = new OverlayManager(this);
 

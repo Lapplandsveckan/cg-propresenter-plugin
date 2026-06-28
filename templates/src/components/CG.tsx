@@ -33,6 +33,7 @@ export const CG: React.FC<CGProps> = ({
             if (timeline) timeline.kill();
 
             const tl = gsap.timeline({
+                paused: true,
                 defaults: {
                     duration: 2,
                     ease: 'power2.inOut',
@@ -52,6 +53,7 @@ export const CG: React.FC<CGProps> = ({
 
         setPrevState(state);
         handle(timeline, state, prevState, styles);
+        timeline.play(0);
     }, [state, timeline]);
 
     return <div ref={ref}>{children}</div>;

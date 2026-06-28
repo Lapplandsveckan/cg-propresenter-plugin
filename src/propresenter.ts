@@ -1,4 +1,6 @@
-import { noTry, noTryAsync } from 'no-try';
+import http from 'http';
+import readline from 'readline';
+import { noTry } from 'no-try';
 import { type Logger } from '@lappis/cg-manager';
 import { type PluginConfig } from './config-store';
 
@@ -8,6 +10,8 @@ interface ClientOptions {
     onStatusChange: (connected: boolean) => void;
     logger: Logger;
 }
+
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 export class ProPresenterClient {
     private opts: ClientOptions;
@@ -26,7 +30,8 @@ export class ProPresenterClient {
     public enable() {
         if (this.enabled) return;
         this.enabled = true;
-        this.connect();
+        this.controller = new AbortController();
+        this.stream();
     }
 
     public disable() {
@@ -56,61 +61,56 @@ export class ProPresenterClient {
             : '';
     }
 
-    private async connect() {
+    private async stream() {
+        while (this.enabled) {
+            try {
+                await this.openStream();
+            } catch (err) {
+                if (err instanceof Error && err.name === 'AbortError') return;
+                this.opts.logger.warn(
+                    `ProPresenter: ${(err as Error).message} — retrying in 1 s`,
+                );
+            } finally {
+                this.setConnected(false);
+            }
+            await sleep(1000);
+        }
+    }
+
+    private openStream(): Promise<void> {
         const { host, port } = this.opts.getConfig();
         const url = `http://${host}:${port}/v1/status/slide?chunked=true`;
 
-        this.controller = new AbortController();
-        const { signal } = this.controller;
+        return new Promise((resolve, reject) => {
+            http.get(
+                url,
+                { signal: this.controller!.signal } as http.RequestOptions,
+                res => {
+                    if (res.statusCode !== 200) {
+                        res.resume();
+                        return reject(
+                            new Error(`unexpected status ${res.statusCode}`),
+                        );
+                    }
 
-        const [fetchErr, res] = await noTryAsync(() => fetch(url, { signal }));
+                    this.setConnected(true);
+                    this.opts.logger.info('Connected to ProPresenter');
 
-        if (fetchErr || !res?.ok) {
-            if (!this.enabled) return;
-            this.setConnected(false);
-            this.opts.logger.warn(
-                `ProPresenter connection failed — retrying in 1 s`,
-            );
-            setTimeout(() => {
-                if (this.enabled) this.connect();
-            }, 1000);
-            return;
-        }
+                    const rl = readline.createInterface({
+                        input: res,
+                        crlfDelay: Infinity,
+                    });
 
-        this.setConnected(true);
-        this.opts.logger.info('Connected to ProPresenter');
+                    rl.on('line', line => {
+                        const trimmed = line.trim();
+                        if (!trimmed) return;
+                        const [, parsed] = noTry(() => JSON.parse(trimmed));
+                        if (parsed) this.opts.onText(this.parseText(parsed));
+                    });
 
-        const reader = res.body!.getReader();
-        const decoder = new TextDecoder();
-        let buffer = '';
-
-        while (true) {
-            const [readErr, chunk] = await noTryAsync(() => reader.read());
-
-            if (readErr || chunk?.done) {
-                if (!this.enabled) return;
-                this.setConnected(false);
-                this.opts.logger.warn(
-                    'ProPresenter stream ended — reconnecting in 1 s…',
-                );
-                setTimeout(() => {
-                    if (this.enabled) this.connect();
-                }, 1000);
-                return;
-            }
-
-            buffer += decoder.decode(chunk!.value, { stream: true });
-
-            // ProPresenter sends one JSON object per line.
-            const lines = buffer.split('\n');
-            buffer = lines.pop()!; // keep the last (possibly incomplete) chunk
-
-            for (const line of lines) {
-                const trimmed = line.trim();
-                if (!trimmed) continue;
-                const [, parsed] = noTry(() => JSON.parse(trimmed));
-                if (parsed) this.opts.onText(this.parseText(parsed));
-            }
-        }
+                    rl.on('close', resolve);
+                },
+            ).on('error', reject);
+        });
     }
 }

@@ -37,6 +37,9 @@ export class PropresenterOverlayEffect extends Effect {
 
     public activate() {
         if (!super.activate()) return;
+        this.executor.execute(
+            CgCommand.update(this.options).allocate(this.layer),
+        );
         return this.executor.execute(CgCommand.play().allocate(this.layer));
     }
 
